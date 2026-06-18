@@ -1,0 +1,45 @@
+name: Continuous Integration & Deployment
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # 1. Job de Qualidade de Código (Linting)
+  lint-and-validate:
+    name: Code Quality Assurance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Architecture
+        uses: actions/checkout@v4
+
+      - name: Setup Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Linters
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Run Syntax and Style Lint (Flake8)
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub Editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  # 2. Job de Deploy (Nasce como um rascunho de infraestrutura)
+  deploy-infrastructure:
+    name: Cluster Deployment Trigger
+    needs: lint-and-validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code Verification Complete
+        run: |
+          echo "Pipeline de Integração executado com sucesso."
+          echo "Próximo passo: Integrar as credenciais do K3s local para deploy automatizado."
