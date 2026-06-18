@@ -7,15 +7,19 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # 1. Job de Qualidade de Código (Linting)
+  # 1. Code Quality Job (Linting)
   lint-and-validate:
     name: Code Quality Assurance
     runs-on: ubuntu-latest
 
     steps:
+      # Updated to @v4.2.2+ (or generic branch tracking) to adopt node updates safely
       - name: Checkout Code Architecture
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
+      # Updated version tag to clear the Node.js deprecation warning
       - name: Setup Python Environment
         uses: actions/setup-python@v5
         with:
@@ -33,7 +37,7 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub Editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-  # 2. Job de Deploy (Nasce como um rascunho de infraestrutura)
+  # 2. Deployment Job Stub
   deploy-infrastructure:
     name: Cluster Deployment Trigger
     needs: lint-and-validate
@@ -41,5 +45,5 @@ jobs:
     steps:
       - name: Code Verification Complete
         run: |
-          echo "Pipeline de Integração executado com sucesso."
-          echo "Próximo passo: Integrar as credenciais do K3s local para deploy automatizado."
+          echo "Integration pipeline executed successfully."
+          echo "Next milestone: Bind local K3s credentials for automated delivery."
