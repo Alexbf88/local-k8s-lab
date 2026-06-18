@@ -141,15 +141,3 @@ sudo echo "master_local_ip rancher.local" >> /etc/hosts
 
     [ ] Implement strict label-based NetworkPolicies to enforce isolation between workloads.
 
-################################################################################################################
-
-helm install rancher rancher-stable/rancher \
-  --namespace cattle-system \
-  --create-namespace \
-  --set hostname=rancher.local \
-  --set replicas=1 \
-  --set bootstrapPassword=admin
-
-Script para verificar se o longhorn está com todas as dependencias:
-qcurl -sSfL https://raw.githubusercontent.com/longhorn/longhorn/v1.8.2/scripts/environment_check.sh | bash
-#################################################################################################################
