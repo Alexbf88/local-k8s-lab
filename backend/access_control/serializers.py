@@ -18,7 +18,7 @@ class ResidentSerializer(serializers.ModelSerializer):
     """
 
     # Includes read-only vehicle relation to list cars directly inside the resident object
-    vehicles = VehicleSerializer(many=True, read_read_only=True)
+    vehicles = VehicleSerializer(many=True, read_only=True)
 
     class Meta:
         model = Resident
