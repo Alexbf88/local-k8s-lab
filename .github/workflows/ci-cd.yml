@@ -40,10 +40,29 @@ jobs:
           # Enforce line length directly in the command matching our standard
           flake8 backend/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-  # 2. Deployment Job Stub
+  # 2. Container Build Validation Job
+  verify-docker-build:
+    name: Verify Container Compilation
+    runs-on: ubuntu-latest
+    needs: lint-and-validate  # Only runs if linting passes completely
+    steps:
+      - name: Checkout Code Architecture
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Verify Container Compilation
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false  # Test compilation only; do not push to a registry yet
+
+  # 3. Deployment Job Stub
   deploy-infrastructure:
     name: Cluster Deployment Trigger
-    needs: lint-and-validate
+    needs: verify-docker-build  # Now waits for the container verification to clear
     runs-on: ubuntu-latest
     steps:
       - name: Code Verification Complete
