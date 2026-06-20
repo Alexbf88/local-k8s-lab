@@ -1,0 +1,29 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-ha
+  namespace: access-control
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
+
+  # Give the database more time to catch up on shared home-lab resources
+  probes:
+    startup:
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 15  # Gives it up to 75 seconds total to reach consistency
+
+  bootstrap:
+    initdb:
+      database: app_db
+      owner: app_user
+
+  storage:
+    size: 5Gi
+    storageClass: local-path
