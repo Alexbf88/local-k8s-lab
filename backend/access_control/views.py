@@ -1,6 +1,11 @@
 from rest_framework import viewsets, filters
 from .models import Resident, Vehicle, Employee, AccessLog
-from .serializers import ResidentSerializer, VehicleSerializer, EmployeeSerializer, AccessLogSerializer
+from .serializers import (
+    ResidentSerializer,
+    VehicleSerializer,
+    EmployeeSerializer,
+    AccessLogSerializer,
+)
 
 
 class ResidentViewSet(viewsets.ModelViewSet):

@@ -14,7 +14,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Employee",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=150)),
                 ("document_id", models.CharField(max_length=50, unique=True)),
                 ("role", models.CharField(max_length=100)),
@@ -24,7 +32,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Resident",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=150)),
                 ("document_id", models.CharField(max_length=50, unique=True)),
                 ("house_number", models.CharField(max_length=20)),
@@ -34,29 +50,59 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="AccessLog",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("timestamp", models.DateTimeField(auto_now_add=True)),
                 (
                     "category",
                     models.CharField(
-                        choices=[("RESIDENT", "Resident"), ("EMPLOYEE", "Employee"), ("VISITOR", "Visitor/Delivery")],
+                        choices=[
+                            ("RESIDENT", "Resident"),
+                            ("EMPLOYEE", "Employee"),
+                            ("VISITOR", "Visitor/Delivery"),
+                        ],
                         max_length=20,
                     ),
                 ),
-                ("visitor_name", models.CharField(blank=True, max_length=150, null=True)),
-                ("visitor_document_id", models.CharField(blank=True, max_length=50, null=True)),
-                ("vehicle_plate", models.CharField(blank=True, max_length=15, null=True)),
-                ("vehicle_info", models.CharField(blank=True, max_length=200, null=True)),
+                (
+                    "visitor_name",
+                    models.CharField(blank=True, max_length=150, null=True),
+                ),
+                (
+                    "visitor_document_id",
+                    models.CharField(blank=True, max_length=50, null=True),
+                ),
+                (
+                    "vehicle_plate",
+                    models.CharField(blank=True, max_length=15, null=True),
+                ),
+                (
+                    "vehicle_info",
+                    models.CharField(blank=True, max_length=200, null=True),
+                ),
                 (
                     "employee",
                     models.ForeignKey(
-                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="access_control.employee"
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="access_control.employee",
                     ),
                 ),
                 (
                     "resident",
                     models.ForeignKey(
-                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="access_control.resident"
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="access_control.resident",
                     ),
                 ),
             ],
@@ -64,14 +110,24 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Vehicle",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("plate", models.CharField(max_length=15, unique=True)),
                 ("model", models.CharField(max_length=100)),
                 ("color", models.CharField(max_length=50)),
                 (
                     "resident",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, related_name="vehicles", to="access_control.resident"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="vehicles",
+                        to="access_control.resident",
                     ),
                 ),
             ],
