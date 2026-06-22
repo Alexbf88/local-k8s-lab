@@ -1,45 +1,52 @@
-# --- STAGE 1: Compile Dependencies ---
+# ==========================================
+# STAGE 1: Builder
+# ==========================================
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Create a virtual environment and put it in the PATH
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
+# Install system dependencies needed for compiling psycopg2
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+    gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Python packages into the virtual environment
 COPY requirements.txt .
-# Install dependencies into a localized folder inside /root/.local
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-
-# --- STAGE 2: Secure Final Runtime ---
-FROM python:3.11-slim AS runner
+# ==========================================
+# STAGE 2: Final Runtime
+# ==========================================
+FROM python:3.11-slim
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# We only need the runtime library for postgres, not the development headers or compiler
+# Install runtime database libraries (needed for psycopg2 to execute)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the compiled dependencies from the builder stage
-COPY --from=builder /root/.local /root/.local
-COPY . .
+# Copy the completely self-contained venv from the builder stage
+COPY --from=builder /opt/venv /opt/venv
 
-# Ensure the system path finds our copied user binaries (like gunicorn)
-ENV PATH=/root/.local/bin:$PATH
+# Ensure Python uses the venv
+ENV PATH="/opt/venv/bin:$PATH"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Your excellent secure user configuration
-RUN useradd -u 8888 appuser && chown -R appuser:appuser /app
-USER appuser
+# Copy the Django application code
+COPY . /app/
+
+# Create a non-root user for security and give ownership of the app folder
+RUN useradd -m portaria_user && chown -R portaria_user:portaria_user /app
+USER portaria_user
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "core.wsgi:application"]
+# Run Gunicorn
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
