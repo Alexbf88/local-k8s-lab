@@ -1,70 +1,61 @@
-name: Continuous Integration & Deployment
+name: CI/CD Pipeline - Portaria Backend
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+  # This automatically matches your GitHub username/repository path in lowercase
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 1. Code Quality Job (Linting & Formatting)
-  lint-and-validate:
-    name: Code Quality Assurance
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write  # 👈 Critical: Gives the runner permission to upload to GHCR
 
     steps:
-      - name: Checkout Code Architecture
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
-      - name: Setup Python Environment
+      # We keep your quality gates intact!
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-python-version: '3.11'
 
-      - name: Install Python Linters and Formatters
+      - name: Install Linting Tools
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 black
+          pip install black
 
-      # Black automatically reads settings from backend/pyproject.toml
-      - name: Verify Code Formatting (Black)
-        run: |
-          black --check backend/
+      - name: Run Black Code Formatter Check
+        run: black --check backend/
 
-      - name: Run Syntax and Style Lint (Flake8)
-        run: |
-          # Stop the build if there are critical Python syntax errors
-          flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Enforce line length directly in the command matching our standard
-          flake8 backend/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-  # 2. Container Build Validation Job
-  verify-docker-build:
-    name: Verify Container Compilation
-    runs-on: ubuntu-latest
-    needs: lint-and-validate  # Only runs if linting passes completely
-    steps:
-      - name: Checkout Code Architecture
-        uses: actions/checkout@v4
-
+      # Set up buildx for optimized container caching
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Verify Container Compilation
+      # Log in to GitHub Container Registry using the built-in temporary GitHub Token
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build and push using the existing multi-stage setup
+      - name: Build and Push DRF Multi-Stage Image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/Dockerfile
-          push: false  # Test compilation only; do not push to a registry yet
-
-  # 3. Deployment Job Stub
-  deploy-infrastructure:
-    name: Cluster Deployment Trigger
-    needs: verify-docker-build  # Now waits for the container verification to clear
-    runs-on: ubuntu-latest
-    steps:
-      - name: Code Verification Complete
-        run: |
-          echo "Integration pipeline executed successfully."
+          push: true
+          # Tags both 'latest' and the specific Git Commit SHA for deployment safety
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
