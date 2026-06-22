@@ -12,18 +12,19 @@ spec:
     podAntiAffinityType: required
     topologyKey: kubernetes.io/hostname
 
-  # Give the database more time to catch up on shared home-lab resources
   probes:
     startup:
       initialDelaySeconds: 10
       periodSeconds: 5
-      failureThreshold: 15  # Gives it up to 75 seconds total to reach consistency
+      failureThreshold: 15
 
   bootstrap:
     initdb:
-      database: app_db
-      owner: app_user
+      database: portaria
+      owner: portaria_user
+      secret:
+        name: portaria-db-credentials
 
   storage:
     size: 5Gi
-    storageClass: local-path
+    storageClass: longhorn
