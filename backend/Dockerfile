@@ -1,52 +1,45 @@
 # ==========================================
-# STAGE 1: Builder
+# STAGE 1: The Builder (Compiles heavy dependencies)
 # ==========================================
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# Create a virtual environment and put it in the PATH
+# Prevent Python from writing .pyc files and buffering stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Create a virtual environment and put it securely in the system PATH
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install system dependencies needed for compiling psycopg2
+# Install system dependencies needed for compiling psycopg2 (and other C-extensions)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages into the virtual environment
+# Copy requirements and install them directly into the isolated virtual environment
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ==========================================
-# STAGE 2: Final Runtime
+# STAGE 2: The Runner (Secure, lightweight final image)
 # ==========================================
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install runtime database libraries (needed for psycopg2 to execute)
+# Prevent Python from writing .pyc files and buffering stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install ONLY the runtime database libraries (needed for psycopg2 to execute, no compilers)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the completely self-contained venv from the builder stage
+# Copy the completely self-contained virtual environment from the builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Ensure Python uses the venv
-ENV PATH="/opt/venv/bin:$PATH"
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Copy the Django application code
-COPY . /app/
-
-# Create a non-root user for security and give ownership of the app folder
-RUN useradd -m portaria_user && chown -R portaria_user:portaria_user /app
-USER portaria_user
-
-EXPOSE 8000
-
-# Run Gunicorn
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Ensure the system uses the virtual environment binaries
